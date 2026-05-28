@@ -80,10 +80,10 @@ if (!fs.existsSync(DB_FILE)) {
 
 // 1. Create Short URL
 app.post("/api/shorten", (req, res) => {
-  const { originalUrl, password, customId, title } = req.body;
+  const { originalUrl, password, customId, title } = req.body || {};
 
-  if (!originalUrl) {
-    return res.status(400).json({ error: "Original URL is required." });
+  if (!originalUrl || typeof originalUrl !== "string") {
+    return res.status(400).json({ error: "Original URL is required and must be a valid string." });
   }
 
   // Basic URL validation
@@ -193,7 +193,10 @@ app.get("/api/info/:id", (req, res) => {
 
 // 3. Verify Password and retrieve Original URL for redirection
 app.post("/api/verify", (req, res) => {
-  const { id, password } = req.body;
+  const { id, password } = req.body || {};
+  if (!id || typeof id !== "string") {
+    return res.status(400).json({ error: "Short link ID is required and must be a string." });
+  }
   const db = readDb();
   const record = db[id];
 

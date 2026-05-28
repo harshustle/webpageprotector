@@ -43,6 +43,10 @@ export default function SecureGate({ shortId, onNotFound }: SecureGateProps) {
         if (!res.ok) {
           throw new Error("Unable to fetch link details.");
         }
+        const contentType = res.headers.get("content-type");
+        if (!contentType || !contentType.includes("application/json")) {
+          throw new Error("Core protocol error: Server returned an unexpected format.");
+        }
         const data = await res.json() as ShortenedUrlPublicInfo;
         setLinkInfo(data);
 
@@ -69,6 +73,10 @@ export default function SecureGate({ shortId, onNotFound }: SecureGateProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: shortId }),
       });
+      const contentType = res.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        throw new Error("Invalid response format received.");
+      }
       const data = await res.json();
       if (res.ok && data.success && data.originalUrl) {
         setSuccessRedirect(data.originalUrl);
@@ -104,7 +112,14 @@ export default function SecureGate({ shortId, onNotFound }: SecureGateProps) {
         body: JSON.stringify({ id: shortId, password }),
       });
 
-      const data = await res.json();
+      let data: any;
+      const contentType = res.headers.get("content-type");
+      if (contentType && contentType.includes("application/json")) {
+        data = await res.json();
+      } else {
+        const textResponse = await res.text();
+        throw new Error(textResponse.slice(0, 50) || `Server error (Status: ${res.status})`);
+      }
 
       if (!res.ok) {
         triggerShake();

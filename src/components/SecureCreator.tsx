@@ -64,10 +64,13 @@ export default function SecureCreator() {
         try {
           const res = await fetch(`/api/info/${link.id}`);
           if (res.ok) {
-            const freshData = await res.json() as ShortenedUrlPublicInfo;
-            if (freshData.visitCount !== link.visitCount) {
-              updatedLinks[index] = { ...link, visitCount: freshData.visitCount };
-              changed = true;
+            const contentType = res.headers.get("content-type");
+            if (contentType && contentType.includes("application/json")) {
+              const freshData = await res.json() as ShortenedUrlPublicInfo;
+              if (freshData.visitCount !== link.visitCount) {
+                updatedLinks[index] = { ...link, visitCount: freshData.visitCount };
+                changed = true;
+              }
             }
           }
         } catch {
@@ -122,7 +125,14 @@ export default function SecureCreator() {
         body: JSON.stringify(payload),
       });
 
-      const body = await res.json();
+      let body: any;
+      const contentType = res.headers.get("content-type");
+      if (contentType && contentType.includes("application/json")) {
+        body = await res.json();
+      } else {
+        const textResponse = await res.text();
+        throw new Error(textResponse.slice(0, 50) || `Core protocol error (Status: ${res.status})`);
+      }
 
       if (!res.ok) {
         throw new Error(body.error || "Failed to create short link.");
