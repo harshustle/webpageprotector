@@ -1,0 +1,6 @@
+{
+  "name": "Password-Protected URL Shortener",
+  "description": "Create short, secure, and password-protected links. Redirect visitors only after safe password verification.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
